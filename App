@@ -1,0 +1,165 @@
+"""
+====================================================
+  📚 AI HOMEWORK BOT — Powered by Claude API
+  Control via WhatsApp | Runs 24/7 on Railway VPS
+====================================================
+"""
+
+from flask import Flask, request
+from twilio.twiml.messaging_response import MessagingResponse
+from twilio.rest import Client
+import anthropic
+import os
+import re
+from docx_generator import create_homework_doc
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Flask(__name__)
+
+# ── Clients ──────────────────────────────────────
+claude  = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+twilio  = Client(os.environ["TWILIO_ACCOUNT_SID"], os.environ["TWILIO_AUTH_TOKEN"])
+
+YOUR_WHATSAPP = os.environ["YOUR_WHATSAPP_NUMBER"]   # e.g. whatsapp:+1234567890
+TWILIO_NUMBER  = os.environ["TWILIO_WHATSAPP_NUMBER"] # e.g. whatsapp:+14155238886
+
+# ── System prompt — Claude acts as your academic assistant ───
+SYSTEM_PROMPT = """
+You are an expert academic assistant for a university student.
+When given a homework topic or question you must:
+
+1. Write a full, well-structured academic response.
+2. Include an introduction, body paragraphs, and conclusion.
+3. Use formal academic language.
+4. Add 4-6 real APA 7th-edition references at the end.
+5. If the request is for an infographic, return structured sections
+   with headers, bullet points, key stats, and a summary — clearly
+   labeled so they can be turned into a visual layout.
+6. Be thorough — this is going to be submitted as schoolwork.
+
+Always respond in the same language the student uses.
+"""
+
+# ── Conversation memory (per session) ────────────
+conversation_history = {}
+
+# ─────────────────────────────────────────────────
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    incoming_msg = request.values.get("Body", "").strip()
+    sender       = request.values.get("From", "")
+
+    if not incoming_msg:
+        return _twiml_reply("❓ Send me a homework question or topic!")
+
+    # Keep conversation history per user
+    if sender not in conversation_history:
+        conversation_history[sender] = []
+
+    conversation_history[sender].append({
+        "role": "user",
+        "content": incoming_msg
+    })
+
+    # Detect if user wants a document
+    wants_doc = any(w in incoming_msg.lower() for w in [
+        "doc", "document", "word", "download", "file", "essay",
+        "research", "paper", "infographic", "report", "assignment"
+    ])
+
+    # ── Call Claude ──────────────────────────────
+    try:
+        response = claude.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4000,
+            system=SYSTEM_PROMPT,
+            messages=conversation_history[sender]
+        )
+        answer = response.content[0].text
+
+        # Save Claude's reply in history
+        conversation_history[sender].append({
+            "role": "assistant",
+            "content": answer
+        })
+
+        # ── Generate .docx if requested ──────────
+        if wants_doc:
+            topic   = incoming_msg[:60]
+            docpath = create_homework_doc(topic, answer)
+            _send_document(sender, docpath, topic)
+            preview = answer[:400] + "\n\n📄 *Full document sent above!*"
+            return _twiml_reply(preview)
+
+        # ── Plain text reply (split if too long) ─
+        if len(answer) > 1500:
+            _send_long_message(sender, answer)
+            return _twiml_reply("📚 Answer sent in parts above ⬆️")
+
+        return _twiml_reply(answer)
+
+    except Exception as e:
+        return _twiml_reply(f"⚠️ Error: {str(e)}\nPlease try again.")
+
+
+# ─────────────────────────────────────────────────
+def _twiml_reply(text):
+    resp = MessagingResponse()
+    resp.message(text)
+    return str(resp)
+
+
+def _send_long_message(to, text, chunk_size=1400):
+    """Split long responses into multiple WhatsApp messages."""
+    parts = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+    for i, part in enumerate(parts, 1):
+        twilio.messages.create(
+            body=f"📖 Part {i}/{len(parts)}:\n\n{part}",
+            from_=TWILIO_NUMBER,
+            to=to
+        )
+
+
+def _send_document(to, filepath, topic):
+    """Send the .docx file via Twilio media message."""
+    # NOTE: For Twilio to send files, the file must be hosted at a public URL.
+    # On Railway, use the PUBLIC_URL env var (set automatically).
+    public_url = os.environ.get("RAILWAY_STATIC_URL", "")
+    filename   = os.path.basename(filepath)
+
+    if public_url:
+        file_url = f"{public_url}/files/{filename}"
+        twilio.messages.create(
+            body=f"📄 Here is your document: *{topic}*",
+            from_=TWILIO_NUMBER,
+            to=to,
+            media_url=[file_url]
+        )
+    else:
+        twilio.messages.create(
+            body=f"📄 Document ready: {filename}\n(Deploy to Railway to enable file sending)",
+            from_=TWILIO_NUMBER,
+            to=to
+        )
+
+
+# ── File serving route ────────────────────────────
+from flask import send_from_directory
+
+@app.route("/files/<filename>")
+def serve_file(filename):
+    return send_from_directory("generated_docs", filename)
+
+
+# ── Health check ──────────────────────────────────
+@app.route("/")
+def index():
+    return "🤖 Homework Bot is running! Send a WhatsApp message to get started."
+
+
+if __name__ == "__main__":
+    os.makedirs("generated_docs", exist_ok=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
+
