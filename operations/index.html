@@ -324,7 +324,24 @@ const DEFAULT = {
   orders:[]
 };
 
+// Starter menu loaded on very first launch so the device opens ready to use.
+// These are PLACEHOLDERS — edit prices/names or use Products → Import menu to
+// drop in your real list. Nothing here is your actual data.
+const STARTER = [
+  ["Water (500ml)", 1.50, 48],
+  ["Soft Drink",    2.00, 36],
+  ["Coffee",        3.00, null],
+  ["Tea",           2.50, null],
+  ["Snack / Bar",   2.00, 40],
+  ["Sandwich",      6.50, 12]
+];
+
+const FRESH = localStorage.getItem(KEY) === null;
 let DB = load();
+if(FRESH){
+  DB.products = STARTER.map(([name,price,stock])=>({id:uid(), name, price, stock}));
+  save();
+}
 let cart = []; // [{productId, name, price, qty}]
 
 function load(){
