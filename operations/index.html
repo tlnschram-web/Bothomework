@@ -183,7 +183,10 @@
 
     <!-- ================= PRODUCTS ================= -->
     <section class="view" id="view-products">
-      <button class="btn full" id="btnAddProduct">＋ Add product</button>
+      <div class="grid cols2">
+        <button class="btn full" id="btnAddProduct">＋ Add product</button>
+        <button class="btn ghost full" id="btnImportMenu">⤵ Import menu</button>
+      </div>
       <div class="card" style="margin-top:12px; padding:0" id="prodListCard">
         <div id="prodList"></div>
         <div class="empty" id="prodEmpty"><div class="big">🏷️</div><p>No products yet</p></div>
@@ -278,6 +281,27 @@
     <button class="btn full" id="pmSave" style="margin-top:16px">Save</button>
     <button class="btn danger full" id="pmDelete" style="margin-top:10px; display:none">Delete product</button>
     <button class="btn ghost full" id="pmCancel" style="margin-top:10px">Cancel</button>
+  </div>
+</div>
+
+<!-- Import menu modal -->
+<div class="modal" id="modalImport">
+  <div class="sheet">
+    <h3>Import menu</h3>
+    <p class="muted" style="font-size:13px; margin-top:2px">
+      Paste your items — one per line. Stock in (brackets) is optional.<br>
+      Examples: <code>Cappuccino 3.50 (20)</code> · <code>Croissant, 2.80</code> · <code>Latte - $3.50 (15)</code><br>
+      A JSON array like <code>[{"name":"Tea","price":3,"stock":10}]</code> also works.
+    </p>
+    <textarea id="impText" style="min-height:160px; font-family:monospace; font-size:14px"
+      placeholder="Cappuccino 3.50 (20)&#10;Croissant 2.80&#10;Iced Tea 3.00 (15)"></textarea>
+    <label style="display:flex; align-items:center; gap:8px; margin-top:10px">
+      <input type="checkbox" id="impReplace" style="width:auto" />
+      <span style="font-weight:600; color:var(--ink)">Replace current product list (otherwise merge/update)</span>
+    </label>
+    <div id="impPreview" class="muted" style="font-size:13px; margin-top:8px"></div>
+    <button class="btn full" id="impDo" style="margin-top:14px">Import items</button>
+    <button class="btn ghost full" id="impCancel" style="margin-top:10px">Cancel</button>
   </div>
 </div>
 
@@ -523,6 +547,86 @@ document.getElementById("pmDelete").onclick=()=>{
   if(!confirm("Delete \""+editingProduct.name+"\"?")) return;
   DB.products = DB.products.filter(x=>x!==editingProduct);
   save(); hideModal("modalProduct"); renderProducts();
+};
+
+/* ---------- Menu import (paste text or JSON) ---------- */
+// Parse a pasted menu into [{name, price, stock|null}].
+function parseMenu(text){
+  text = (text||"").trim();
+  if(!text) return [];
+  // JSON array / object of items
+  if(text[0]==="[" || text[0]==="{"){
+    try{
+      let data = JSON.parse(text);
+      if(!Array.isArray(data)) data = data.products || data.items || [data];
+      return data.map(d=>({
+        name: String(d.name ?? d.title ?? d.label ?? "").trim(),
+        price: Number(d.price ?? d.cost ?? d.amount ?? 0) || 0,
+        stock: (d.stock ?? d.qty ?? d.quantity) == null ? null : Math.max(0, parseInt(d.stock ?? d.qty ?? d.quantity) || 0)
+      })).filter(p=>p.name);
+    }catch(e){ /* fall through to line parsing */ }
+  }
+  const out=[];
+  text.split(/\r?\n/).forEach(raw=>{
+    let line = raw.trim();
+    if(!line || line.startsWith("#") || line.startsWith("//")) return;
+    let stock = null;
+    // trailing "(20)" or "x20" or "qty 20" => stock
+    let m = line.match(/[\(\[]\s*(\d+)\s*[\)\]]\s*$/) || line.match(/(?:x|qty|stock)\s*:?\s*(\d+)\s*$/i);
+    if(m){ stock = parseInt(m[1]); line = line.slice(0, m.index).trim(); }
+    // CSV / tab separated
+    if(/[,\t]/.test(line)){
+      const parts = line.split(/[,\t]/).map(s=>s.trim()).filter(s=>s!=="");
+      const name = parts[0];
+      const price = parts[1]!=null ? parseFloat(parts[1].replace(/[^0-9.]/g,"")) : 0;
+      if(stock===null && parts[2]!=null) stock = Math.max(0, parseInt(parts[2].replace(/[^0-9]/g,"")) || 0);
+      if(name) out.push({name, price: price||0, stock});
+      return;
+    }
+    // Freeform: last number on the line is the price, text before it is the name
+    const nums = [...line.matchAll(/\d+(?:[.,]\d{1,2})?/g)];
+    if(nums.length){
+      const last = nums[nums.length-1];
+      const price = parseFloat(last[0].replace(",", "."));
+      let name = line.slice(0, last.index).replace(/[-–:•·\s$£€¥₹]+$/,"").trim();
+      if(!name) name = line.trim();
+      out.push({name, price: price||0, stock});
+    } else {
+      out.push({name: line, price:0, stock});
+    }
+  });
+  return out;
+}
+
+const impText = document.getElementById("impText");
+document.getElementById("btnImportMenu").onclick=()=>{
+  impText.value=""; document.getElementById("impReplace").checked=false;
+  document.getElementById("impPreview").textContent=""; showModal("modalImport");
+};
+document.getElementById("impCancel").onclick=()=>hideModal("modalImport");
+impText.addEventListener("input", ()=>{
+  const items = parseMenu(impText.value);
+  const prev = document.getElementById("impPreview");
+  if(!items.length){ prev.textContent=""; return; }
+  prev.innerHTML = "Found <b>"+items.length+"</b> item"+(items.length!==1?"s":"")+": " +
+    items.slice(0,6).map(i=>esc(i.name)+" "+money(i.price)).join(" · ") +
+    (items.length>6? " …":"");
+});
+document.getElementById("impDo").onclick=()=>{
+  const items = parseMenu(impText.value);
+  if(!items.length){ toast("Nothing to import — check the format"); return; }
+  if(document.getElementById("impReplace").checked){
+    if(!confirm("Replace all "+DB.products.length+" current products with these "+items.length+"?")) return;
+    DB.products = [];
+  }
+  let added=0, updated=0;
+  items.forEach(it=>{
+    const existing = DB.products.find(p=>p.name.toLowerCase()===it.name.toLowerCase());
+    if(existing){ existing.price=it.price; if(it.stock!==null) existing.stock=it.stock; updated++; }
+    else { DB.products.push({id:uid(), name:it.name, price:it.price, stock:it.stock}); added++; }
+  });
+  save(); hideModal("modalImport"); renderProducts(); renderSell();
+  toast(added+" added"+(updated?", "+updated+" updated":""));
 };
 
 /* ============================================================
