@@ -1,0 +1,16 @@
+# Warike website — Netlify configuration
+# The site is prebuilt static files in /site, no build step needed.
+
+[build]
+  publish = "site"
+
+# Fingerprinted assets can be cached forever; index.html must always revalidate.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
