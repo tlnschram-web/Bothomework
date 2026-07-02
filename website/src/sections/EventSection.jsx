@@ -11,7 +11,7 @@ function CalendarButtons() {
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 bg-sun text-ink rounded-full px-6 py-3.5 font-medium hover:bg-bone transition-colors"
       >
-        Add to Google Calendar
+        Add to Google Calendar<span className="sr-only"> (opens in new tab)</span>
       </a>
       <a
         href={ICS_URL}
@@ -26,7 +26,8 @@ function CalendarButtons() {
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 border border-bone/40 text-bone rounded-full px-6 py-3.5 font-medium hover:bg-bone hover:text-ink transition-colors"
       >
-        Get directions ↗
+        Get directions <span aria-hidden="true">↗</span>
+        <span className="sr-only">(opens in new tab)</span>
       </a>
     </div>
   )
@@ -53,7 +54,7 @@ export default function EventSection() {
               </p>
               <p className="mt-2 text-bone/70 text-lg">
                 <a href={EVENT.mapsUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-bone/30 underline-offset-4 hover:text-sun transition-colors">
-                  {EVENT.cityLabel} — tap for directions
+                  {EVENT.cityLabel} — tap for directions<span className="sr-only"> (opens in new tab)</span>
                 </a>
                 <span className="mx-2">·</span>
                 pop-up runs until the end of August

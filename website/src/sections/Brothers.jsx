@@ -14,21 +14,21 @@ const BROTHERS = [
     name: 'Mateo',
     role: 'Taking the order',
     panel: 'bg-sun text-ink',
-    image: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=1200&q=80',
+    image: null, // waiting on a real photo — branded panel renders instead
     text: 'On the till and watching the queue. Built businesses in Peru and Rotterdam. Tell him if it’s your first time — he’ll talk you through the menu.',
   },
   {
     name: 'Tiago',
     role: 'Drinks & flow',
     panel: 'bg-lima text-ink',
-    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1200&q=80',
+    image: null, // waiting on a real photo — branded panel renders instead
     text: 'Pouring Chicha Morada, brewing coffee, floating wherever the line is longest. The friendly chaos-killer.',
   },
 ]
 
 function BrotherImage({ brother }) {
   const [failed, setFailed] = useState(false)
-  if (failed) {
+  if (!brother.image || failed) {
     return (
       <div className={`aspect-[4/3] ${brother.panel} flex flex-col items-center justify-center gap-2`}>
         <Logo className="h-20 w-20" />
@@ -54,7 +54,7 @@ export default function Brothers() {
     <section id="brothers" className="px-6 md:px-10 py-24 md:py-36 scroll-mt-20">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex items-baseline gap-5 mb-8">
-          <span className="font-display text-2xl font-bold text-lima">03 /</span>
+          <span className="font-display text-2xl font-bold text-lima-deep">03 /</span>
           <span className="uppercase tracking-[0.25em] text-xs">The Brothers</span>
         </div>
         <SplitHeading

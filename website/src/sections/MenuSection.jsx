@@ -2,6 +2,7 @@ import { Reveal, SplitHeading } from '../components/Shared.jsx'
 
 const V = () => (
   <span
+    role="img"
     className="inline-flex items-center justify-center align-middle ml-2 h-6 w-6 rounded-full bg-lima text-ink font-script text-sm leading-none pt-1"
     title="Vegetarian"
     aria-label="Vegetarian"
@@ -103,7 +104,15 @@ export default function MenuSection() {
                     <div className="flex items-start justify-between gap-6">
                       <div>
                         <h4 className="font-display text-2xl md:text-3xl font-bold tracking-tightest flex items-center flex-wrap gap-x-2">
-                          {item.hero && <span className="text-sun text-2xl leading-none" title="House hero">★</span>}
+                          {item.hero && (
+                            <span
+                              role="img"
+                              aria-label="House hero"
+                              className="text-clay-deep group-hover:text-sun transition-colors text-2xl leading-none"
+                            >
+                              ★
+                            </span>
+                          )}
                           {item.name}
                           {item.vegetarian && <V />}
                         </h4>
@@ -120,11 +129,16 @@ export default function MenuSection() {
 
         <Reveal className="mt-16 border-t border-ink/15 pt-8 flex flex-col md:flex-row md:items-center justify-between gap-6 text-sm text-ink/60">
           <div>
-            <span className="text-sun text-lg align-middle mr-2">★</span>
+            <span className="text-clay-deep text-lg align-middle mr-2" aria-hidden="true">★</span>
             Our heroes — the two to order first.
-            <span className="mx-3">·</span>
+            <span className="mx-3" aria-hidden="true">·</span>
             <span className="inline-flex items-center">
-              <span className="h-5 w-5 rounded-full bg-lima text-ink font-script text-xs inline-flex items-center justify-center mr-1.5 pt-0.5">v</span>
+              <span
+                aria-hidden="true"
+                className="h-5 w-5 rounded-full bg-lima text-ink font-script text-xs inline-flex items-center justify-center mr-1.5 pt-0.5"
+              >
+                v
+              </span>
               vegetarian
             </span>
           </div>
@@ -134,10 +148,10 @@ export default function MenuSection() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-ink text-bone rounded-full px-6 py-3 font-medium hover:bg-chicha transition-colors self-start md:self-auto"
           >
-            Download the menu (PDF) ↓
+            Download the menu (PDF) <span aria-hidden="true">↓</span>
           </a>
         </Reveal>
-        <Reveal className="mt-6 text-xs text-ink/40">
+        <Reveal className="mt-6 text-sm text-ink/70">
           Please inform staff of any food allergies before ordering · ingredients may change and cross-contamination is
           possible · prices in euros.
         </Reveal>

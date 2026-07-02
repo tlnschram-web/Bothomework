@@ -12,6 +12,7 @@ export default function Hero() {
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-bone via-bone/85 to-bone/10" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-bone/85 to-transparent" />
       </div>
 
       <div className="relative z-10 max-w-[1600px] mx-auto w-full">

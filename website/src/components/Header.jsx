@@ -37,7 +37,7 @@ export default function Header() {
             <a
               key={href}
               href={href}
-              className="text-sm font-medium uppercase tracking-widest hover:text-chicha transition-colors"
+              className="text-sm font-medium uppercase tracking-widest hover:text-chicha-deep transition-colors"
             >
               {label}
             </a>
@@ -49,6 +49,7 @@ export default function Header() {
             className="ml-2 inline-flex items-center rounded-full bg-ink text-bone px-5 py-2.5 text-sm font-medium hover:bg-chicha transition-colors"
           >
             {EVENT.instagramHandle}
+            <span className="sr-only"> — Instagram (opens in new tab)</span>
           </a>
         </nav>
 

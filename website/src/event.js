@@ -6,7 +6,7 @@
 export const EVENT = {
   name: 'Warique — Lima Day (Opening Day)',
   dateLabel: 'Sunday 5 July 2026',
-  timeLabel: 'from 12:00',
+  timeLabel: 'doors 12:00–18:00',
   cityLabel: 'Rotterdam, NL',
   openingUtcMs: Date.UTC(2026, 6, 5, 10, 0, 0), // 12:00 CEST
   endOfDayUtcMs: Date.UTC(2026, 6, 5, 16, 0, 0), // 18:00 CEST
@@ -39,13 +39,18 @@ const amsDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam' }
 
 /**
  * Event phase for a given instant:
- *  'before'  — countdown is running
- *  'today'   — it's 5 July in Amsterdam
- *  'open'    — season running (6 July → 31 Aug)
- *  'wrapped' — season over
+ *  'before'    — countdown is running
+ *  'today'     — it's 5 July in Amsterdam, doors not open yet
+ *  'doorsOpen' — Lima Day is happening right now (12:00–18:00)
+ *  'open'      — season running (rest of 5 July evening → 31 Aug)
+ *  'wrapped'   — season over
  */
 export function getPhase(nowMs = Date.now()) {
-  if (amsDay.format(new Date(nowMs)) === EVENT.amsterdamOpeningDate) return 'today'
+  if (amsDay.format(new Date(nowMs)) === EVENT.amsterdamOpeningDate) {
+    if (nowMs >= EVENT.endOfDayUtcMs) return 'open'
+    if (nowMs >= EVENT.openingUtcMs) return 'doorsOpen'
+    return 'today'
+  }
   if (nowMs < EVENT.openingUtcMs) return 'before'
   if (nowMs <= EVENT.seasonEndUtcMs) return 'open'
   return 'wrapped'

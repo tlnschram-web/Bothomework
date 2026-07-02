@@ -16,11 +16,21 @@ const pad = (n) => String(n).padStart(2, '0')
 export function CountdownBoard({ className = '' }) {
   const { phase, remaining } = useEventClock()
 
+  if (phase === 'doorsOpen') {
+    return (
+      <div className={className}>
+        <p className="font-display text-3xl md:text-5xl font-black tracking-tightest">
+          Lima Day is happening — right now! <span className="text-sun" aria-hidden="true">★</span>
+        </p>
+        <p className="mt-3 text-bone/70">Doors are open until 18:00. Come through.</p>
+      </div>
+    )
+  }
   if (phase === 'open') {
     return (
       <div className={className}>
         <p className="font-display text-3xl md:text-5xl font-black tracking-tightest">
-          We&rsquo;re open! <span className="text-sun">★</span>
+          We&rsquo;re open! <span className="text-sun" aria-hidden="true">★</span>
         </p>
         <p className="mt-3 text-bone/70">The pop-up is running until the end of August. Come say hola.</p>
       </div>
@@ -67,7 +77,9 @@ export function CountdownInline({ className = '' }) {
   if (phase === 'before') {
     text = `Opening in ${remaining.days}d ${pad(remaining.hours)}h ${pad(remaining.minutes)}m ${pad(remaining.seconds)}s`
   } else if (phase === 'today') {
-    text = 'Opening day — today!'
+    text = 'Opening day — today at 12:00!'
+  } else if (phase === 'doorsOpen') {
+    text = 'Open now — until 18:00 today'
   } else if (phase === 'open') {
     text = 'We’re open — until the end of August'
   } else {
@@ -76,9 +88,9 @@ export function CountdownInline({ className = '' }) {
   return (
     <a
       href="#event"
-      className={`inline-flex items-center gap-3 rounded-full bg-chicha text-bone px-5 py-2.5 text-sm font-medium hover:bg-ink transition-colors ${className}`}
+      className={`inline-flex items-center gap-3 rounded-full bg-chicha-deep text-bone px-5 py-2.5 text-sm font-medium hover:bg-ink transition-colors ${className}`}
     >
-      <span className="relative flex h-2.5 w-2.5">
+      <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sun opacity-75"></span>
         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sun"></span>
       </span>

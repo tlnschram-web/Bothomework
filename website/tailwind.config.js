@@ -6,10 +6,10 @@ export default {
       colors: {
         ink: '#0b0b0b',
         bone: '#f4efe6',
-        chicha: '#e91e63',
+        chicha: { DEFAULT: '#e91e63', deep: '#c2185b' },
         sun: '#ffd426',
-        lima: '#27c46b',
-        clay: '#f05a14',
+        lima: { DEFAULT: '#27c46b', deep: '#187a44' },
+        clay: { DEFAULT: '#f05a14', deep: '#c2410c' },
       },
       fontFamily: {
         display: ['Fraunces Variable', 'Fraunces', 'Georgia', 'serif'],

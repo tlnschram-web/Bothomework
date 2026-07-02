@@ -7,20 +7,20 @@ const BLOCKS = [
     note: 'Reels, drops, pop-up dates.',
     href: EVENT.instagramUrl,
     external: true,
-    lines: ['@warique', '.eu'],
+    text: '@warique.eu',
   },
   {
     label: 'Email',
     note: 'Catering, events, anything else.',
     href: `mailto:${EVENT.email}`,
-    lines: ['hello@', 'warike.eu'],
+    text: 'hello@warike.eu',
   },
   {
     label: 'Where',
     note: 'Open from 5 July until the end of August — tap for directions.',
     href: EVENT.mapsUrl,
     external: true,
-    lines: ['Rotterdam,', 'NL'],
+    text: 'Rotterdam, NL',
   },
 ]
 
@@ -29,7 +29,7 @@ export default function Visit() {
     <section id="visit" className="px-6 md:px-10 py-24 md:py-36 bg-bone scroll-mt-20">
       <div className="max-w-[1600px] mx-auto">
         <div className="flex items-baseline gap-5 mb-8">
-          <span className="font-display text-2xl font-bold text-clay">04 /</span>
+          <span className="font-display text-2xl font-bold text-clay-deep">04 /</span>
           <span className="uppercase tracking-[0.25em] text-xs">Get in touch</span>
         </div>
         <SplitHeading
@@ -46,17 +46,14 @@ export default function Visit() {
         <div className="mt-16 grid md:grid-cols-3 gap-12">
           {BLOCKS.map((b, i) => (
             <Reveal key={b.label} delay={i * 0.1}>
-              <div className="text-xs uppercase tracking-widest text-ink/40 mb-3">{b.label}</div>
+              <div className="text-xs uppercase tracking-widest text-ink/60 mb-3">{b.label}</div>
               <a
                 href={b.href}
                 {...(b.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                className="font-display text-4xl md:text-5xl font-black tracking-tightest leading-tight hover:text-chicha transition-colors block"
+                className="font-display text-4xl md:text-5xl font-black tracking-tightest leading-tight hover:text-chicha-deep transition-colors block break-words"
               >
-                {b.lines.map((l, j) => (
-                  <span key={j} className="block">
-                    {l}
-                  </span>
-                ))}
+                {b.text}
+                {b.external && <span className="sr-only"> (opens in new tab)</span>}
               </a>
               <p className="mt-3 text-ink/60 text-sm max-w-[26ch]">{b.note}</p>
             </Reveal>
