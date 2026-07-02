@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bone text-ink font-sans antialiased;
+}
+
+::selection {
+  @apply bg-chicha text-bone;
+}
+
+/* ---- line-by-line heading reveal ---- */
+.reveal-line {
+  display: block;
+  overflow: hidden;
+}
+.reveal-line > span {
+  display: block;
+  transform: translateY(115%);
+  transition: transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.is-revealed .reveal-line > span {
+  transform: translateY(0);
+}
+
+/* ---- fade-up reveal ---- */
+.fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fade-up.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- marquee ---- */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee var(--marquee-duration, 28s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal-line > span,
+  .fade-up {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+  .marquee-track {
+    animation: none;
+  }
+}
